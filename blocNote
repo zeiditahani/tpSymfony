@@ -1,0 +1,259 @@
+cd /var/www/html/TpSymfony/
+symfony new Zeiditahani --version="6.3.*"
+cd Zeiditahani
+composer require webapp
+code .
+composer require symfony/orm-pack
+composer require --dev symfony/maker-bundle
+php bin/console doctrine:database:create
+symfony console make:entity 
+migrate/migration
+php bin/console make:entity --regenerate
+
+**********************************************************************
+****************formulaire********************************************
+**********************************************************************
+composer require symfony/form=>genere le package de la formulaire
+symfony console make:entity contacteznous
+symfony console make:form=>// src/Form/Type/ContactType.php
+symfony console make:controller contacteznous
+symfony console doctrine:schema:update --force  
+
+dans ContactType ajoutez:
+
+$builder
+->add('nom', TextType::class)
+->add('email', TextType::class)
+->add('message', TextareaType::class)
+->add('envoyer', SubmitType::class)
+;
+} et  n oubliiez pas d importer: 
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+
+
+==>Maintenant que le formulaire a été créé, la prochaine étape consiste à faire l'affichage : {# templates/contact/new.html.twig #}
+{{ form(form) }} ==> on arrive a un affichage du formulaire mais sans manipulation des donnes  
+//Traitement des données du formulaire:
+Remarq1:isValid(): méthode qui contrôle que toutes les données du formulaire vérifient les contraintes de validation.
+Remarq2:tester l’existence de la méthode Post dans l’objet $request.
+
+
+==>Maintenant l'espace de travail est le ContactController pour manipuler les donnes(CRUD):
+les importations dans controller
+use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+use App\Entity\Conference;
+use App\Form\ConferenceType;
+**********************************************************************
+affichage de donnes:
+#[Route('/list', name: 'list', methods: ['GET'])]
+    public function list(ManagerRegistry $doctrine): Response
+    {
+        $conferences = $doctrine->getRepository(Conference::class)->findAll();
+
+        return $this->render('liste.html.twig', [
+            'conferences' => $conferences,
+        ]);
+    }
+***************************************************************************
+a_insertion:
+n'oubliezpasd'importer:useDoctrine\Persistence\ManagerRegistry;
+
+ #[Route('/new', name: 'new')]
+    public function new(Request $request,ManagerRegistry $doctrine, ValidatorInterface $validator): Response
+{
+// créer un objet contact
+$contact = new Nous();
+$form = $this->createForm(NousType::class, $contact);
+$form->handleRequest($request);
+if ($form->isSubmitted() && $form->isValid()) {
+// récupérer les données envoyées
+$contact= $form->getData();
+// traitement: par exemple insertion dans la base de données
+$entityManager = $doctrine->getManager();
+        //insérer les données
+        $entityManager->persist($contact);
+        $entityManager->flush();
+        return $this->redirectToRoute('list', ['id' => $exemple->getId()]);
+
+}
+return $this->render('nous/new.html.twig', [
+'form' => $form,
+]);
+}
+**********************************************************************
+b-modifier
+#[Route('/edit/{id}/', name: 'edit', methods: ['GET', 'POST'])]
+     
+    public function edit(Request $request, Nous $nous,ManagerRegistry $doctrine): Response
+    {
+        $form = $this->createForm(NousType::class, $nous);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+        //insertion dans la base de données
+            $entityManager = $doctrine->getManager();
+            $entityManager->persist($nous);
+            $entityManager->flush();
+
+            return $this->redirectToRoute('list', ['id' => $nous->getId()]);
+        }
+
+        return $this->render('edit.html.twig', [
+            'nous' => $nous,
+            'form' => $form->createView(),
+        ]);
+    }
+    ******************************************************************
+    c-suppression:
+    #[Route('/delete/{id}', name: 'delete')]
+    public function delete(Conference $conference,ManagerRegistry $doctrine): Response
+    {
+        $entityManager = $doctrine->getManager();
+        $entityManager->remove($conference);
+        $entityManager->flush();
+
+        // Redirection vers une page de confirmation ou autre
+        return $this->redirectToRoute('list');
+    }
+******************************************************
+dans le twig sous le folder de l'entité considérée:
+list.html.twig avec le path list
+{% extends 'base.html.twig' %}
+{% block body %}
+<h1>Conférences</h1>
+
+<table>
+<tr>
+<th>Ville</th>
+<th>Internationale</th>
+<th>Année</th>
+</tr>
+
+{% for i in exemple %}
+<tr>
+<td> {{i.nom}} </td>
+<td>{{i.pwd }} </td>
+<td>{{i.msg}} </td>
+ <td><a href="{{path('edit',{id:i.id})}}">Modifier </a></td>
+ <td><a href="{{path('delete',{id:i.id})}}">Supprimer </a></td>
+  
+</tr>
+
+{% endfor %}
+</table>
+{% endblock %}
+****************************
+new.html.twig
+
+{{ form(form) }}
+****************************
+edit.html.twig
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier la conférence{{ exemple.id }}{% endblock %}
+
+{% block body %}
+    <h1>Modifier la conférence "{{ exemple.nom }}"</h1>
+
+    {{ form_start(form) }}
+        {{ form_row(form.nom) }}
+        {{ form_row(form.pwd) }}
+         {{ form_row(form.msg) }}
+          {#{ form_row(form.international) }#}
+
+        <button type="submit">Modifier</button>
+    {{ form_end(form) }}
+
+    <a href="{{ path('list') }}">Retour à la liste des conférences</a>
+{% endblock %}
+****************************************************************************
+******************Security***************************************
+***************************************************************************
+composer require symfony/security-bundle =>un fichier de configuration config/packages/security.yaml sera créé
+php bin/console make:user => passer yes tjrs => Entity/User.php
+composer require symfonycasts/verify-email-bundle
+php bin/console make:registration-form =>configurer le contrôleur d'inscription et
+ajouter des fonctionnalités telles quelavérificationdel'adresse e-mail à l'aide deSymfonyCastsVerifyEmailBundle
+****************************************************************************
+******************Authentification***************************************
+***************************************************************************
+php bin/console make:controller User
+Activez l'authentificateur de connexion par formulaire à l'aide du paramètre form_login :
+firewalls:
+main:
+6# ...
+form_login:
+# "login" is the name of the route
+login_path: login
+check_path: login
+=>Modifiez le contrôleur de connexion pour afficher le formulaire de connexion :
+#[Route('/login', name: 'login')]
+public function login(AuthenticationUtils $authenticationUtils)
+{
+// get the login error if there is one
+$error = $authenticationUtils->getLastAuthenticationError();
+// last username entered by the user
+$lastUsername = $authenticationUtils->getLastUsername();
+return $this->render('user/login.html.twig', [
+'last_username' => $lastUsername,
+'error'
+=> $error,
+]);
+}
+=>mettez à jour le template {# templates/user/login.html.twig#}
+{% extends 'base.html.twig' %}
+
+{% block body %}
+{% if error %}
+<div>{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+{% endif %}
+<form action="{{ path('login') }}" method="post">
+<label for="username">Email:</label>
+<input type="text" id="username" name="_username" value="{{ last_username
+}}"/>
+7<label for="password">Password:</label>
+<input type="password" id="password" name="_password"/>
+{# If you want to control the URL the user is redirected to on success
+<input type="hidden" name="_target_path" value="/account"/> #}
+<button type="submit">Login</button>
+</form>
+{% endblock %}
+
+N.b : pour traduire les messages d’erreur en français :
+- composer require symfony/translation
+- dans le fichier : config/packages/translation.yaml :
+framework:
+default_locale: fr
+translator:
+default_path: '%kernel.project_dir%/translations'
+******************
+Protection CSRF dans les formulaires de connexion:
+composer require symfony/security-csrf
+# config/packages/security.yaml
+security:
+# ...
+firewalls:
+secured_area:
+# ...
+form_login:
+# ...
+enable_csrf: true
+===>Ensuite, utilisez la fonction csrf_token() dans le modèle Twig pour générer un jeton
+CSRF et le stocker en tant que champ masqué du formulaire.
+{# ... the login fields #}
+<input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+<button type="submit">login</button>
+</form>
+****************************************************************************
+******************Administration***************************************
+***************************************************************************
+composer require easycorp/easyadmin-bundle
+php bin/console make:admin:dashboard
+symfony console make:admin:crud
+

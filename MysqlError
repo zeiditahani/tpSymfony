@@ -1,0 +1,38 @@
+MySQL a répondu : Documentation
+
+#3152 - JSON column 'images' supports indexing only via generated columns on a specified JSON path.
+ERREUR:
+L'erreur que vous avez rencontrée concerne une tentative d'ajout d'une contrainte de clé étrangère à une colonne JSON dans une table MySQL. 
+SOLUTION:
+-- Étape 1 : Créer une colonne générée pour extraire image_id
+ALTER TABLE umrah
+ADD COLUMN image_id INT GENERATED ALWAYS AS (images->'$.image_id') STORED;
+
+-- Étape 2 : Créer un index sur la colonne générée
+CREATE INDEX idx_image_id ON umrah (image_id);
+
+-- Étape 3 : Créer la contrainte de clé étrangère
+ALTER TABLE umrah
+ADD CONSTRAINT fk_image_id FOREIGN KEY (image_id) REFERENCES images (id);
+********************************************************************************************************************************************
+php bin/console doctrine:schema:update --dump-sql
+********************************************************************************************************************************************
+The target-entity App\Entity\region cannot be found in 'App\Entity\Cruise#regions'.
+==>Solution:Pour résoudre cette erreur, assurez-vous que l'entité App\Entity\Region existe et est correctement importée dans votre entité App\Entity\Cruise. 
+********************************************************************************************************************************************
+An exception has been thrown during the rendering of a template ("Object of class Doctrine\ORM\PersistentCollection could not be converted to string").
+===>L'erreur "Object of class Doctrine\ORM\PersistentCollection could not be converted to string" indique que vous essayez d'afficher directement un objet PersistentCollection dans votre modèle Twig, ce qui n'est pas possible car Twig ne peut pas convertir automatiquement cet objet en chaîne.
+
+<div class="rbt-card-bottom">
+    {% for region in d.regions %}
+        <a class="transparent-button" href="blog-details.html">{{ region.getTitle() }}</a>
+    {% endfor %}
+</div>
+*********************************************************************************************************************************************
+Cannot autowire argument $cruise of "App\Controller\frontend\CruiseController::detailCruise()": it needs an instance of "App\Entity\Cruise" but this type has been excluded in "config/services.yaml".
+solution==> ajouter   App\Entity\Cruise: dans config/services.yaml
+******************************************************************************************************************************************
+The target-entity App\Entity\hiking cannot be found in 'App\Entity\Agency#hiking'.
+
+==>solution: ajouter targetEntity: Agency::class dans     #[ORM\ManyToOne(inversedBy: 'hiking', targetEntity: Agency::class)]
+de l entité class Hiking

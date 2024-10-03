@@ -1,0 +1,77 @@
+ pour creer un projet: 
+ tahani@tahani-Latitude-E6430:~$ symfony new projectName --version="6.3.*" --webapp
+ composer require webapp :si je l'oublie
+*******************
+composer  create-project symfony/skeleton:6.3.* projectName
+cd projectName
+compose require webapp
+*******************
+commande LTS ta3tina la version la plus stable
+*******************
+tahani@tahani-Latitude-E6430:~$ cd /var/www/html/TpSymfony/projectName   
+tahani@tahani-Latitude-E6430:~/TP1$ symfony serve -d : to run on symfony server
+
+************************************************************************
+composer require symfony/apache-pack :na3mela f racine chaque projet ki n7eb run 3al apache
+tahani@tahani-Latitude-E6430:/var/www/html/TpSymfony/Routes$ sudo apt-get install php7.4-xml
+tahani@tahani-Latitude-E6430:/var/www/html/TpSymfony/Routes$ sudo systemctl restart apache2
+************************************************************************
+composer require annotations tres iportante!!!!!
+**********************************************************************
+si j essaye de changer le type d une attribut d entité je dois d abord vider le table dans le base de donnees
+tahani@tahani-Latitude-E6430:~/portfolio$ symfony console doctrine:schema:upda
+te --force
+ Updating database schema...
+
+
+In ExceptionConverter.php line 117:
+                                                                             
+  An exception occurred while executing a query: SQLSTATE[22001]: String da  
+  ta, right truncated: 1406 Data too long for column 'description' at row 1  
+
+*****************************************
+symfony new projectName
+composer require webapp
+******formulaire************************
+composer require symfony/form
+Créez l’entité contact:
+symfony console make:entity contact
+Créer le contrôleur ContactController
+symfony console make:controller Contact
+Créer le contrôleur Contact
+public function addContact()
+{
+// créer un objet contact
+$contact = new Contact();
+$form = $this->createFormBuilder($contact)
+->add('nom', TextType::class)
+->add('email', TextType::class)
+->add('message', TextareaType::class)
+->add('envoyer', SubmitType::class, ['label' => 'Envoyer'])
+->getForm();
+// ...
+}
+n'oubliez pas d importer 
+use App\Entity\Contact;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+.Création dans une classe indépendante de formulaire des form type qui implémentent FormTypeInterface.
+php bin/console make:form =>ajouter nom de formulaire et l entité correspondante
+==>on obtient ContactType ou on cree qlq choses manuellemnt 
+public function buildForm(FormBuilderInterface $builder, array $options): void
+{
+$builder
+->add('nom', TextType::class)
+->add('email', TextType::class)
+->add('message', TextareaType::class)
+->add('envoyer', SubmitType::class) 
+;
+} noublie pas 
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+
+
+***************tp security**************
+
